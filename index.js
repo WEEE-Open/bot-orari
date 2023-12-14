@@ -51,7 +51,7 @@ client.on('message', async (msg) => {
 		db.updateUser(msg.from.id, {username: msg.from.username, name: msg.from.first_name});
 	}
 	if (chatState[msg.chat.id] != undefined) {
-		if (msg.text == 'cancel') {
+		if (msg.text == 'cancel' || msg.text == '/cancel') {
 			delete chatState[msg.chat.id];
 			client.sendMessage(msg.chat.id, 'Operation cancelled!', {message_thread_id: msg.message_thread_id});
 			return;
@@ -87,10 +87,11 @@ process.on('uncaughtException', function(err) {
 	console.log('Caught exception: ' + err + '\n' + err.stack);
 });
 
-process.on('SIGINT', () => { // attempt to save the database when the process is terminated
+// disabled for now cause it makes the bot never shut down
+/*process.on('SIGINT', () => { // attempt to save the database when the process is terminated
 	db.save();
 	client.close();
-});
+});*/
 
 client.getMyName().then(name => {
 	console.log('Logged in as ' + name.name);

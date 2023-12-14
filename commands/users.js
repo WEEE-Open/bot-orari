@@ -2,6 +2,22 @@ import { db, client, chatState, cron } from '../index.js';
 import Time from '../time.js';
 import { getWeekNumberFromDate } from '../utils.js';
 
+export const addfirstuser = {
+	name: 'addfirstuser',
+	description: 'Add the first user',
+	canRunPublic: false,
+	canRunPrivate: true,
+	requireAdmin: false,
+	execute(msg, args) {
+		if (db.getUsers().length != 0) {
+			client.sendMessage(msg.chat.id, 'There are already users in this bot, use \\adduser to add a new user', {message_thread_id: msg.message_thread_id});
+			return;
+		}
+		db.addUser({id: msg.from.id, username: msg.from.username, name: msg.from.first_name});
+		client.sendMessage(msg.chat.id, 'User added!', {message_thread_id: msg.message_thread_id});
+	}
+}
+
 export const setname = {
 	name: 'setname',
 	description: 'Set your name',

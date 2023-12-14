@@ -30,6 +30,9 @@ export default class Time {
 		let [hour, minute] = string.split(":");
 		hour = parseInt(hour);
 		minute = parseInt(minute || 0);
+		if (isNaN(hour) || isNaN(minute)) {
+			throw "Invalid time";
+		}
 		if (hour < 0 || hour > 23) {
 			throw "Invalid hour";
 		}
