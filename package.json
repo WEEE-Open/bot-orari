@@ -8,7 +8,7 @@
     "start": "node index.js"
   },
   "author": "Enrico",
-  "license": "MIT",
+  "license": "AGPL v3",
   "dependencies": {
     "node-schedule": "^2.1.1",
     "node-telegram-bot-api": "^0.64.0"
