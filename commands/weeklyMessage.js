@@ -98,6 +98,7 @@ export const setweeklymessagetime = {
 			db.setWeeklyMessageWeekday(null);
 			client.sendMessage(msg.chat.id, 'Weekly message time unset!', {message_thread_id: msg.message_thread_id});
 			cron.updateAnnouncementJob();
+			delete chatState[msg.chat.id];
 			return;
 		}
 
@@ -153,10 +154,10 @@ export const setweeklymessagetime = {
 			delete chatState[msg.chat.id];
 			cron.updateAnnouncementJob();
 			return;
-		} else if (chatState[msg.chat.id].time != undefined) {
-			client.sendMessage(msg.chat.id, 'What day of the week should the message be sent? (0-6, monday, tue...)', {message_thread_id: msg.message_thread_id});
-		} else {
-			client.sendMessage(msg.chat.id, 'What time should the message be sent? (hh:mm)', {message_thread_id: msg.message_thread_id});
+		} else if (chatState[msg.chat.id].weekday == undefined) {
+			client.sendMessage(msg.chat.id, 'Please enter the weekday to send the weekly message on (0-6, monday, tue...):', {message_thread_id: msg.message_thread_id});
+		} else if (chatState[msg.chat.id].time == undefined) {
+			client.sendMessage(msg.chat.id, 'Please enter the time to send the weekly message at (hh:mm):', {message_thread_id: msg.message_thread_id});
 		}
 	}
 }

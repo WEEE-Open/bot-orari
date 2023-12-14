@@ -132,6 +132,15 @@ export const setremindertime = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	async execute(msg, args) {
+		if (args != undefined && args[0] == 'off') {
+			db.setReminderMessageTime(null);
+			db.setReminderMessageWeekday(null);
+			client.sendMessage(msg.chat.id, 'Reminder time unset!', {message_thread_id: msg.message_thread_id});
+			cron.updateReminderJob();
+			delete chatState[msg.chat.id];
+			return;
+		}
+		
 		if (chatState[msg.chat.id] == undefined) 
 			chatState[msg.chat.id] = {command: 'setremindertime', time: null, weekday: null};
 
