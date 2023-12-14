@@ -1,0 +1,22 @@
+{
+  "name": "bot-orari",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --trace-warnings index.js",
+    "start": "node index.js"
+  },
+  "author": "Enrico",
+  "license": "MIT",
+  "dependencies": {
+    "node-schedule": "^2.1.1",
+    "node-telegram-bot-api": "^0.64.0"
+  },
+  "type": "module",
+  "nodemonConfig": {
+    "ignore": [
+      "db.json"
+    ]
+  }
+}
