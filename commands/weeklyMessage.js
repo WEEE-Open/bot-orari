@@ -9,7 +9,7 @@ export const previeweeklymessage = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	execute(msg, args = []) {
-		let offset = parseInt(args[0]) || 0;
+		let offset = parseInt(args[0]) || 1;
 		let date = new Date();
 		date.setDate(date.getDate() + offset*7);
 		let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(date));
@@ -75,13 +75,8 @@ export const sendweeklymessage = {
 				return;
 			}
 		}
-		let [channelId, threadId] = (""+ id).split(':');
-		let now = new Date();
-		let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(now));
-		let newWeeklyMessage = await client.sendMessage(channelId, generateScheduleMessage(bookings), {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: threadId});
-		db.setWeekMessageLastTime(now);
-		db.setWeekMessageId(newWeeklyMessage.message_id);
-		client.sendMessage(msg.chat.id, 'Message sent!', {message_thread_id: msg.message_thread_id});
+		sendNewWeeklyMessage();
+		client.sendMessage(msg.chat.id, 'Weekly message sent!', {message_thread_id: msg.message_thread_id});
 		delete chatState[msg.chat.id];
 	}
 }
@@ -167,23 +162,31 @@ export async function sendNewWeeklyMessage() {
 	if (id == null) return;
 	let [channelId, threadId] = ("" + id).split(':');
 	let now = new Date();
-	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(now));
-	let newWeeklyMessage = await client.sendMessage(channelId, generateScheduleMessage(bookings), {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: threadId});
+	let week = new Date();
+	if (now.getDay() == 0 || now.getDay() == 6) week.setDate(week.getDate() + 7);
+	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(week));
+	let message = generateScheduleMessage(bookings);
+	let newWeeklyMessage = await client.sendMessage(channelId, message, {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: threadId});
 	db.setWeekMessageLastTime(now);
 	db.setWeekMessageId(newWeeklyMessage.message_id);
+	db.setWeeklyMessageWeek(week);
+	db.setWeeklyMessageText(message);
 }
 
 export function updateWeeklyMessage() {
 	let channel = db.getAnnouncementChannel();
 	let id = db.getWeekMessageId();
-	if (channel == null || id == null) return;
+	let week = db.getWeeklyMessageWeek();
+	if (channel == null || id == null || week == null) return;
 	let [channelId, threadId] = ("" + channel).split(':');
 	let now = new Date();
-	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(now));
-	client.editMessageText(generateScheduleMessage(bookings), {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
+	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(week));
+	let message = generateScheduleMessage(bookings);
+	if (message == db.getWeeklyMessageText()) return;
+	client.editMessageText(message, {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
 		console.log("There was an error when trying to update the announcement message, this is probably fine as we don't check that changes actually happened, but just in case it's needed, here is the error", err);
 	}); // we don't know if this is going to fail on not, telegram doesn't have an api to get an old message apparently
-	db.setWeekMessageLastTime(now);
+	db.setWeeklyMessageText(message);
 }
 
 export function generateScheduleMessage(bookings) {

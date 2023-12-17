@@ -1,6 +1,7 @@
 import { db, client, chatState, cron } from '../index.js';
 import Time from '../time.js';
 import { getWeekNumberFromDate } from '../utils.js';
+import { updateWeeklyMessage } from './weeklyMessage.js';
 
 export const addfirstuser = {
 	name: 'addfirstuser',
@@ -31,6 +32,7 @@ export const setname = {
 			db.updateUser(msg.from.id, {name: args.join(' ')});
 			client.sendMessage(msg.chat.id, 'Name set to <b>' + args.join(' ') + '</b>', {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 			delete chatState[msg.chat.id];
+			updateWeeklyMessage();
 			return;
 		}
 		chatState[msg.chat.id] = {command: 'setname'};
@@ -202,14 +204,13 @@ export const setremindertime = {
 }
 
 export function sendReminderToAllUsers() {
-	console.log('asd');
 	let date = new Date();
 	date.setDate(date.getDate() + 7);
 	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(date));
 	let users = db.getUsers();
 	for (let user of users) {
 		if (user.sendReminderNotification && bookings.find(booking => booking.userId == user.id) == undefined) {
-			client.sendMessage(user.id, 'You haven\'t yet submitted your availability for next week! Please do so by running /book, or if you are available with the same schedule as last week use the command /copyfromlastweek');
+			client.sendMessage(user.id, 'You haven\'t yet submitted your availability for next week! Please do so by running /book, or if you are available with the same schedule as last week use the command /copyfromlastweek').catch(() => {});
 		}
 	}
 }

@@ -49,6 +49,8 @@ export default class JsonDB {
 		if (this.db.reminderMessage.time != null) this.db.reminderMessage.time = new Time(...this.db.reminderMessage.time);
 		else this.db.reminderMessage.time = null;
 		this.db.reminderMessage.weekday = this.db.reminderMessage.weekday || null; // js standard order aka 0 = sunday, 1 = monday, etc
+		this.db.weeklyMessageWeek = this.db.weeklyMessageWeek || null;
+		this.db.weeklyMessageText = this.db.weeklyMessageText || null;
 		this.db.bookings = this.db.bookings || [];
 		this.db.bookings.map(booking => {
 			booking.date = new Date(booking.date);
@@ -242,5 +244,23 @@ export default class JsonDB {
 
 	getReminderMessageWeekday() {
 		return this.db.reminderMessage.weekday;
+	}
+
+	setWeeklyMessageWeek(week) {
+		this.db.weeklyMessageWeek = week;
+		this.update();
+	}
+
+	getWeeklyMessageWeek() {
+		return this.db.weeklyMessageWeek;
+	}
+
+	setWeeklyMessageText(text) {
+		this.db.weeklyMessageText = text;
+		this.update();
+	}
+
+	getWeeklyMessageText() {
+		return this.db.weeklyMessageText;
 	}
 }

@@ -86,7 +86,7 @@ export const book = {
 			let thisWeek = getWeekNumberFromDate(new Date());
 			let bookingWeek = getWeekNumberFromDate(chatState[msg.chat.id].date);
 			delete chatState[msg.chat.id];
-			if (thisWeek[0] == bookingWeek[0] && thisWeek[1] == bookingWeek[1]) updateWeeklyMessage(); // doing this later cause it could crash
+			updateWeeklyMessage();
 		}
 	}
 }
@@ -191,11 +191,7 @@ export const removebooking = {
 					client.sendMessage(msg.chat.id, 'Booking removed!', {message_thread_id: msg.message_thread_id});
 					let thisWeek = getWeekNumberFromDate(new Date());
 					let bookingWeek = getWeekNumberFromDate(chatState[msg.chat.id].date);
-					try {
-						if (thisWeek[0] == bookingWeek[0] && thisWeek[1] == bookingWeek[1]) updateWeeklyMessage();
-					} catch (e) {
-						// ignore
-					}
+					updateWeeklyMessage();
 				} else {
 					client.sendMessage(msg.chat.id, 'You don\'t have a booking for that date!', {message_thread_id: msg.message_thread_id});
 				}

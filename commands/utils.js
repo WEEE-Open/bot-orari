@@ -1,4 +1,5 @@
 import { db, client, commands } from '../index.js';
+import fs from "fs/promises";
 
 export const ping = {
 	name: 'ping',
@@ -49,5 +50,35 @@ export const help = {
 			message += `/${command.name} - ${command.description}\n`;
 		});
 		client.sendMessage(msg.chat.id, message, {message_thread_id: msg.message_thread_id});
+	}
+}
+
+export const commit = {
+	name: 'commit',
+	description: 'Check commit version',
+	canRunPublic: false,
+	canRunPrivate: true,
+	requireAdmin: false,
+	async execute(msg, args) {
+		fs.readFile("./.git/HEAD").then((commit)=>{
+			if (/^[a-f0-9]{40}$/i.test(String(commit).toString().trim())) {
+				client.sendMessage(msg.chat.id, "Last commit hash: " + commit.toString().trim(), {message_thread_id: msg.message_thread_id});
+			} else {
+				fs.readFile("./.git/" + String(commit).substring(5).trim()).then((commit)=>{
+					if (/^[a-f0-9]{40}$/i.test(String(commit).toString().trim())) {
+						client.sendMessage(msg.chat.id, "Last commit hash: " + commit.toString().trim(), {message_thread_id: msg.message_thread_id});
+					} else {
+						console.log("no git head file found", err);
+						client.sendMessage(msg.chat.id, "Can't retreive last commit hash", {message_thread_id: msg.message_thread_id});
+					}
+				}).catch((err)=>{
+					console.log("no git head file found", err);
+					client.sendMessage(msg.chat.id, "Can't retreive last commit hash", {message_thread_id: msg.message_thread_id});
+				});
+			}
+		}).catch((err)=>{
+			console.log("no git head file found", err);
+			client.sendMessage(msg.chat.id, "Can't retreive last commit hash", {message_thread_id: msg.message_thread_id});
+		});
 	}
 }
