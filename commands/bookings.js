@@ -179,7 +179,7 @@ export const removebooking = {
 		if (chatState[msg.chat.id].date == undefined) {
 			client.sendMessage(msg.chat.id, 'Please enter the date of the booking to remove:', {message_thread_id: msg.message_thread_id});
 		} else {
-			if (bookings.reduce((total,date) => total+(date.getDate() == chatState[msg.chat.id].date.getDate() && date.getMonth() == chatState[msg.chat.id].date.getMonth() && date.getFullYear() == chatState[msg.chat.id].date.getFullYear()), 0) == 1) {
+			if (bookings.reduce((total,{date}) => total+(date.getDate() == chatState[msg.chat.id].date.getDate() && date.getMonth() == chatState[msg.chat.id].date.getMonth() && date.getFullYear() == chatState[msg.chat.id].date.getFullYear()), 0) == 1) {
 				chatState[msg.chat.id].timeStart = bookings[0].timeStart;
 			}
 			if (chatState[msg.chat.id].timeStart == undefined) {
