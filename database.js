@@ -152,7 +152,7 @@ export default class JsonDB {
 
 	updateUser(id, user) {
 		this.db.users = this.db.users.map(u => {
-			if (u.id == id) return {...user, ...u};
+			if (u.id == id) return {...u, ...user};
 			return u;
 		});
 		this.update();
