@@ -115,7 +115,7 @@ export default class JsonDB {
 	}
 
 	removeBooking(date, timeStart) {
-		this.db.bookings = this.db.bookings.filter(booking => !(booking.date == date && booking.timeStart.isSame(timeStart)));
+		this.db.bookings = this.db.bookings.filter(booking => !(booking.date.getDate() == date.getDate() && booking.date.getMonth() == date.getMonth() && booking.date.getFullYear() == date.getFullYear() && booking.timeStart.isSame(timeStart)));
 		this.update();
 	}
 
