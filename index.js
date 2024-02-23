@@ -3,9 +3,9 @@ import config from './config.js';
 import Telegram from 'node-telegram-bot-api';
 import JsonDB from './database.js';
 import Cron from './cron.js';
-import { ping, start, id, help, commit } from './commands/utils.js';
+import { ping, start, id, help, commit, status } from './commands/utils.js';
 import { book, bookings, removebooking, copyfromlastweek } from './commands/bookings.js';
-import { setname, adduser, removeuser, users, disablereminder, enablereminder, setremindertime } from './commands/users.js';
+import { setname, adduser, addfirstuser, removeuser, users, disablereminder, enablereminder, setremindertime } from './commands/users.js';
 import { previeweeklymessage, setannouncementchannel, sendweeklymessage, setweeklymessagetime } from './commands/weeklyMessage.js';
 
 export const chatState = {};
@@ -21,6 +21,7 @@ export const commands = {
 	id,
 	help,
 	commit,
+	status,
 
 	// bookings
 	book,
@@ -31,6 +32,7 @@ export const commands = {
 	// users
 	setname,
 	adduser,
+	addfirstuser,
 	removeuser,
 	users,
 	disablereminder,

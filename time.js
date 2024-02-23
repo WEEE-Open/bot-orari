@@ -42,6 +42,15 @@ export default class Time {
 		return new Time(hour, minute);
 	}
 
+	/**
+	 * 
+	 * @param {Date} date 
+	 * @returns {Time}
+	 */
+	static fromDate(date) {
+		return new Time(date.getHours(), date.getMinutes());
+	}
+
 	toDate() {
 		let date = new Date();
 		date.setHours(this.hour);

@@ -1,5 +1,6 @@
-import { db, client, commands } from '../index.js';
+import { db, client, commands, cron } from '../index.js';
 import fs from "fs/promises";
+import Time from '../time.js';
 
 export const ping = {
 	name: 'ping',
@@ -80,5 +81,33 @@ export const commit = {
 			console.log("no git head file found", err);
 			client.sendMessage(msg.chat.id, "Can't retreive last commit hash", {message_thread_id: msg.message_thread_id});
 		});
+	}
+}
+
+export const status = {
+	name: 'status',
+	description: 'Check status',
+	canRunPublic: false,
+	canRunPrivate: true,
+	requireAdmin: true,
+	async execute(msg, args) {
+		let reminderCron = cron.reminderJob;
+		let announcementCron = cron.announcementJob;
+		let message = '';
+		if (reminderCron != null) {
+			let nextReminder = reminderCron.nextInvocation();
+			let time = Time.fromDate(nextReminder);
+			message += `The reminder message is sent on ${['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][nextReminder.getDay()]} at ${time.toString()}, next execution on ${nextReminder.getFullYear()}-${nextReminder.getMonth() + 1}-${nextReminder.getDate()}.\n\n`;
+		} else {
+			message += "The reminder message is currently disabled.\n\n";
+		}
+		if (announcementCron != null) {
+			let nextAnnouncement = announcementCron.nextInvocation();
+			let time = Time.fromDate(nextAnnouncement);
+			message += `The weekly message is sent on ${['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][nextAnnouncement.getDay()]} at ${time.toString()}, next execution on ${nextAnnouncement.getFullYear()}-${nextAnnouncement.getMonth() + 1}-${nextAnnouncement.getDate()}.`;
+		} else {
+			message += "The weekly message is currently disabled.";
+		}
+		client.sendMessage(msg.chat.id, message, {message_thread_id: msg.message_thread_id});
 	}
 }
