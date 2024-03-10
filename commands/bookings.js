@@ -147,6 +147,13 @@ export const removebooking = {
 					client.sendMessage(msg.chat.id, 'You can\'t delete bookings in the past!', {message_thread_id: msg.message_thread_id});
 					chatState[msg.chat.id].date = null;
 				}
+				let bookingsByDateByUser = db.getBookingsByDateByUser(chatState[msg.chat.id].date, msg.from.id);
+				if (bookingsByDateByUser.length == 0) {
+					client.sendMessage(msg.chat.id, 'You have no bookings for that date!', {message_thread_id: msg.message_thread_id});
+					chatState[msg.chat.id].date = null;
+				} else if (bookingsByDateByUser.length == 1) {
+					chatState[msg.chat.id].timeStart = bookingsByDateByUser[0].timeStart;
+				}
 			} else {
 				client.sendMessage(msg.chat.id, 'Invalid date!', {message_thread_id: msg.message_thread_id});
 			}
@@ -208,6 +215,8 @@ export const copyfromlastweek = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	execute(msg, args) {
+		client.sendMessage(msg.chat.id, 'Feature currently disabled', {message_thread_id: msg.message_thread_id});
+		return;
 		let now = new Date();
 		let nowWeek = getWeekNumberFromDate(now);
 		let lastWeek = getWeekNumberFromDate(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7));

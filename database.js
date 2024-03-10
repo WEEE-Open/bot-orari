@@ -137,6 +137,10 @@ export default class JsonDB {
 		return this.db.bookings.filter(booking => booking.date.getDate() == date.getDate() && booking.date.getMonth() == date.getMonth() && booking.date.getFullYear() == date.getFullYear());
 	}
 
+	getBookingsByDateByUser(date, userId) {
+		return this.db.bookings.filter(booking => booking.date.getDate() == date.getDate() && booking.date.getMonth() == date.getMonth() && booking.date.getFullYear() == date.getFullYear() && booking.userId == userId);
+	}
+
 	getUsers() {
 		return this.db.users;
 	}
