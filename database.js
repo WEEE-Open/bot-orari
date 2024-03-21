@@ -54,7 +54,7 @@ export default class JsonDB {
 		this.db.weeklyMessageText = this.db.weeklyMessageText || null;
 		this.db.bookings = this.db.bookings || [];
 		this.db.bookings.map(booking => {
-			if (booking.date instanceof String)
+			if (typeof booking.date == "string")
 				booking.date = FancyDate.fromString(booking.date); // backwards compatibility
 			else booking.date = new FancyDate(booking.date);
 			booking.timeStart = new Time(...booking.timeStart);
