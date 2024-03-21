@@ -1,6 +1,6 @@
+import FancyDate from '../date.js';
 import { db, client, chatState } from '../index.js';
 import Time from '../time.js';
-import { formatDate, getWeekNumberFromDate } from '../utils.js';
 import { updateWeeklyMessage } from './weeklyMessage.js';
 
 export const book = {
@@ -23,28 +23,15 @@ export const book = {
 		}
 		
 		if (args[0] != undefined) {
-			// detect if it's just a number
-			if (args[0].match(/^\d+$/)) { // assume it's today's month if it's the same or a day in the future, otherwise assume it's next month
-				let date = new Date();
-				if (args[0] < date.getDate()) {
-					date.setMonth(date.getMonth() + 1);
-				}
-				date.setDate(args[0]);
-				chatState[msg.chat.id].date = date;
-			} else {
-				// detect if it's a date
-				let date = new Date(args[0]);
-				if (date != 'Invalid Date') {
-					chatState[msg.chat.id].date = date;
-				}
-			}
-
-			if (chatState[msg.chat.id].date != undefined) { // check if in the past
-				if (chatState[msg.chat.id].date < new Date()) {
+			try {
+				let date = new FancyDate(args[0]);
+				if (date.inPast()) {
 					client.sendMessage(msg.chat.id, 'You can\'t book in the past!', {message_thread_id: msg.message_thread_id});
 					chatState[msg.chat.id].date = null;
+				} else {
+					chatState[msg.chat.id].date = date;
 				}
-			} else {
+			} catch (e) {
 				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
 			}
 		}
@@ -82,9 +69,7 @@ export const book = {
 				timeStart: chatState[msg.chat.id].timeStart,
 				timeEnd: chatState[msg.chat.id].timeEnd
 			});
-			client.sendMessage(msg.chat.id, 'Your booking has been added for ' + formatDate(chatState[msg.chat.id].date) + ' from ' + chatState[msg.chat.id].timeStart.toString() + ' to ' + chatState[msg.chat.id].timeEnd.toString() + '!', {message_thread_id: msg.message_thread_id});
-			let thisWeek = getWeekNumberFromDate(new Date());
-			let bookingWeek = getWeekNumberFromDate(chatState[msg.chat.id].date);
+			client.sendMessage(msg.chat.id, 'Your booking has been added for ' + chatState[msg.chat.id].date.toString() + ' from ' + chatState[msg.chat.id].timeStart.toString() + ' to ' + chatState[msg.chat.id].timeEnd.toString() + '!', {message_thread_id: msg.message_thread_id});
 			delete chatState[msg.chat.id];
 			updateWeeklyMessage();
 		}
@@ -101,10 +86,11 @@ export const bookings = {
 		let bookings = db.getBookingsByUser(msg.from.id);
 		if (bookings.length == 0) {
 			client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
+			return;
 		}
 		let message = '';
 		for (let booking of bookings) {
-			message += `- ${formatDate(booking.date)} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+			message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 		}
 		client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 	}
@@ -126,36 +112,23 @@ export const removebooking = {
 				args = [null, msg.text];
 		}
 		if (args[0] != undefined) {
-			// detect if it's just a number
-			if (args[0].match(/^\d+$/)) { // assume it's today's month if it's the same or a day in the future, otherwise assume it's next month
-				let date = new Date();
-				if (args[0] < date.getDate()) {
-					date.setMonth(date.getMonth() + 1);
-				}
-				date.setDate(args[0]);
-				chatState[msg.chat.id].date = date;
-			} else {
-				// detect if it's a date
-				let date = new Date(args[0]);
-				if (date != 'Invalid Date') {
+			try {
+				let date = new FancyDate(args[0]);
+				if (date.inPast()) {
+					client.sendMessage(msg.chat.id, 'You can\'t delte bookings in the past!', {message_thread_id: msg.message_thread_id});
+					chatState[msg.chat.id].date = null;
+				} else {
 					chatState[msg.chat.id].date = date;
+					let bookingsByDateByUser = db.getBookingsByDateByUser(chatState[msg.chat.id].date, msg.from.id);
+					if (bookingsByDateByUser.length == 0) {
+						client.sendMessage(msg.chat.id, 'You have no bookings for that date!', {message_thread_id: msg.message_thread_id});
+						chatState[msg.chat.id].date = null;
+					} else if (bookingsByDateByUser.length == 1) {
+						chatState[msg.chat.id].timeStart = bookingsByDateByUser[0].timeStart;
+					}
 				}
-			}
-	
-			if (chatState[msg.chat.id].date != undefined) { // check if in the past
-				if (chatState[msg.chat.id].date < new Date()) {
-					client.sendMessage(msg.chat.id, 'You can\'t delete bookings in the past!', {message_thread_id: msg.message_thread_id});
-					chatState[msg.chat.id].date = null;
-				}
-				let bookingsByDateByUser = db.getBookingsByDateByUser(chatState[msg.chat.id].date, msg.from.id);
-				if (bookingsByDateByUser.length == 0) {
-					client.sendMessage(msg.chat.id, 'You have no bookings for that date!', {message_thread_id: msg.message_thread_id});
-					chatState[msg.chat.id].date = null;
-				} else if (bookingsByDateByUser.length == 1) {
-					chatState[msg.chat.id].timeStart = bookingsByDateByUser[0].timeStart;
-				}
-			} else {
-				client.sendMessage(msg.chat.id, 'Invalid date!', {message_thread_id: msg.message_thread_id});
+			} catch (e) {
+				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
 			}
 		}
 		if (args[1] != undefined) {
@@ -178,7 +151,7 @@ export const removebooking = {
 			} else {
 				let message = 'Your current bookings:\n\n';
 				for (let booking of bookings) {
-					message += `- ${formatDate(booking.date)} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+					message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 				}
 				client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 			}
@@ -186,18 +159,13 @@ export const removebooking = {
 		if (chatState[msg.chat.id].date == undefined) {
 			client.sendMessage(msg.chat.id, 'Please enter the date of the booking to remove:', {message_thread_id: msg.message_thread_id});
 		} else {
-			if (bookings.reduce((total,{date}) => total+(date.getDate() == chatState[msg.chat.id].date.getDate() && date.getMonth() == chatState[msg.chat.id].date.getMonth() && date.getFullYear() == chatState[msg.chat.id].date.getFullYear()), 0) == 1) {
-				chatState[msg.chat.id].timeStart = bookings[0].timeStart;
-			}
 			if (chatState[msg.chat.id].timeStart == undefined) {
 				client.sendMessage(msg.chat.id, 'Please enter the start time of the booking to remove:', {message_thread_id: msg.message_thread_id});
 			} else {
-				let booking = bookings.find(booking => booking.date.getDate() == chatState[msg.chat.id].date.getDate() && booking.date.getMonth() == chatState[msg.chat.id].date.getMonth() && booking.date.getFullYear() == chatState[msg.chat.id].date.getFullYear() && booking.timeStart.isSame(chatState[msg.chat.id].timeStart));
+				let booking = bookings.find(booking => booking.date.isEqualTo(chatState[msg.chat.id].date) && booking.timeStart.isSame(chatState[msg.chat.id].timeStart));
 				if (booking != undefined) {
 					db.removeBooking(chatState[msg.chat.id].date, chatState[msg.chat.id].timeStart);
 					client.sendMessage(msg.chat.id, 'Booking removed!', {message_thread_id: msg.message_thread_id});
-					let thisWeek = getWeekNumberFromDate(new Date());
-					let bookingWeek = getWeekNumberFromDate(chatState[msg.chat.id].date);
 					updateWeeklyMessage();
 				} else {
 					client.sendMessage(msg.chat.id, 'You don\'t have a booking for that date!', {message_thread_id: msg.message_thread_id});

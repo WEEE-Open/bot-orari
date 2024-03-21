@@ -1,6 +1,6 @@
 import { db, client, chatState, cron } from '../index.js';
+import FancyDate from '../date.js';
 import Time from '../time.js';
-import { getWeekNumberFromDate } from '../utils.js';
 
 export const previeweeklymessage = {
 	name: 'previeweeklymessage',
@@ -12,7 +12,7 @@ export const previeweeklymessage = {
 		let offset = parseInt(args[0]) || 1;
 		let date = new Date();
 		date.setDate(date.getDate() + offset*7);
-		let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(date));
+		let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(date));
 		let message = generateScheduleMessage(bookings);
 		client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: msg.message_thread_id});
 	}
@@ -164,7 +164,7 @@ export async function sendNewWeeklyMessage() {
 	let now = new Date();
 	let week = new Date();
 	if (now.getDay() == 0 || now.getDay() == 6) week.setDate(week.getDate() + 7);
-	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(week));
+	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(week));
 	let message = generateScheduleMessage(bookings);
 	let newWeeklyMessage = await client.sendMessage(channelId, message, {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: threadId});
 	db.setWeekMessageLastTime(now);
@@ -178,9 +178,10 @@ export function updateWeeklyMessage() {
 	let id = db.getWeekMessageId();
 	let week = db.getWeeklyMessageWeek();
 	if (channel == null || id == null || week == null) return;
+	week = new Date(week);
 	let [channelId, threadId] = ("" + channel).split(':');
 	let now = new Date();
-	let bookings = db.getBookingsByWeek(...getWeekNumberFromDate(week));
+	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(week));
 	let message = generateScheduleMessage(bookings);
 	if (message == db.getWeeklyMessageText()) return;
 	client.editMessageText(message, {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
@@ -194,7 +195,7 @@ export function generateScheduleMessage(bookings) {
 	let message = 'Hi everyone. Here are this week\'s opening schedule:\n\n';
 	let days = {};
 	bookings.forEach((booking) => {
-		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][booking.date.getDay()] + "</b>, " + booking.date.getDate() + '/' + (booking.date.getMonth() + 1);
+		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][booking.date.weekDay] + "</b>, " + booking.date.day + '/' + (booking.date.month + 1);
 		if (!days[d]) days[d] = []
 		days[d].push(booking);
 	});
