@@ -6,6 +6,11 @@ export default class FancyDate {
 			month = day.month;
 			year = day.year;
 			day = day.day;
+		} else if (day instanceof String) {
+			let parsed = FancyDate.fromString(day);
+			day = parsed.day;
+			month = parsed.month;
+			year = parsed.year;
 		} else if (day instanceof Date) {
 			month = day.getMonth();
 			year = day.getFullYear();
@@ -40,10 +45,7 @@ export default class FancyDate {
 	}
 
 	isLessThan(date) {
-		if (this.year < date.year) return true;
-		if (this.month < date.month) return true;
-		if (this.day < date.day) return true;
-		return false;
+		return !(this.isGreaterThan(date) || this.isEqualTo(date));
 	}
 
 	isSameOrGreaterThan(date) {

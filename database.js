@@ -45,11 +45,13 @@ export default class JsonDB {
 		this.db.weeklyMessage = this.db.weeklyMessage || {};
 		if (this.db.weeklyMessage.time != null) this.db.weeklyMessage.time = new Time(...this.db.weeklyMessage.time);
 		else this.db.weeklyMessage.time = null;
-		this.db.weeklyMessage.weekday = this.db.weeklyMessage.weekday || null; // js standard order aka 0 = sunday, 1 = monday, etc
+		if (this.db.weeklyMessage.weekday != null) this.db.weeklyMessage.weekday = this.db.weeklyMessage.weekday; // js standard order aka 0 = sunday, 1 = monday, etc
+		else this.db.weeklyMessage.weekday = null;
 		this.db.reminderMessage = this.db.reminderMessage || {};
 		if (this.db.reminderMessage.time != null) this.db.reminderMessage.time = new Time(...this.db.reminderMessage.time);
 		else this.db.reminderMessage.time = null;
-		this.db.reminderMessage.weekday = this.db.reminderMessage.weekday || null; // js standard order aka 0 = sunday, 1 = monday, etc
+		if (this.db.reminderMessage.weekday != null) this.db.reminderMessage.weekday = this.db.reminderMessage.weekday; // js standard order aka 0 = sunday, 1 = monday, etc
+		else this.db.reminderMessage.weekday = null;
 		this.db.weeklyMessageWeek = this.db.weeklyMessageWeek || null;
 		this.db.weeklyMessageText = this.db.weeklyMessageText || null;
 		this.db.bookings = this.db.bookings || [];

@@ -24,7 +24,7 @@ export const book = {
 		
 		if (args[0] != undefined) {
 			try {
-				let date = new FancyDate(args[0]);
+				let date = FancyDate.fromString(args[0]);
 				if (date.inPast()) {
 					client.sendMessage(msg.chat.id, 'You can\'t book in the past!', {message_thread_id: msg.message_thread_id});
 					chatState[msg.chat.id].date = null;
