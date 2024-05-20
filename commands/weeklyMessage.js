@@ -198,7 +198,7 @@ export function generateScheduleMessage(bookings) {
 		if (!days[d]) days[d] = []
 		days[booking.date.weekDay].push(booking);
 	});
-	Object.entries(days).forEach(([d, bookings], ) => {
+	Object.values(days).forEach((bookings) => {
 		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][bookings[0].date.weekDay] + "</b>, " + bookings[0].date.day + '/' + (bookings[0].date.month + 1);
 		message += d + ':\n';
 		bookings.forEach((booking) => {
