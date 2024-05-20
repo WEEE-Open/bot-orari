@@ -195,6 +195,7 @@ export function generateScheduleMessage(bookings) {
 	let message = 'Hi everyone. Here are this week\'s opening schedule:\n\n';
 	let days = {};
 	bookings.forEach((booking) => {
+		let d = booking.date.weekDay;
 		if (!days[d]) days[d] = []
 		days[booking.date.weekDay].push(booking);
 	});
