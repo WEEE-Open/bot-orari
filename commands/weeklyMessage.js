@@ -195,11 +195,11 @@ export function generateScheduleMessage(bookings) {
 	let message = 'Hi everyone. Here are this week\'s opening schedule:\n\n';
 	let days = {};
 	bookings.forEach((booking) => {
-		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][booking.date.weekDay] + "</b>, " + booking.date.day + '/' + (booking.date.month + 1);
 		if (!days[d]) days[d] = []
-		days[d].push(booking);
+		days[booking.date.weekDay].push(booking);
 	});
 	Object.entries(days).forEach(([d, bookings], ) => {
+		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][bookings[0].date.weekDay] + "</b>, " + bookings[0].date.day + '/' + (bookings[0].date.month + 1);
 		message += d + ':\n';
 		bookings.forEach((booking) => {
 			let user = db.getUser(booking.userId);
