@@ -138,7 +138,7 @@ export const removebooking = {
 				client.sendMessage(msg.chat.id, 'Invalid start time!', {message_thread_id: msg.message_thread_id});
 			}
 		}
-		let bookings = db.getBookingsByUser(msg.from.id);
+		let bookings = db.getBookingsByUser(msg.from.id).filter(booking => !booking.date.inPast());
 		if (args.length == 0) {
 			if (bookings.length == 0) {
 				client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
