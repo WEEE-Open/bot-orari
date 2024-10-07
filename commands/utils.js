@@ -50,6 +50,7 @@ export const help = {
 		Object.values(commands).forEach(command => {
 			message += `/${command.name} - ${command.description}\n`;
 		});
+		message += '\n\nTo interrup a command, use /cancel';
 		client.sendMessage(msg.chat.id, message, {message_thread_id: msg.message_thread_id});
 	}
 }
