@@ -25,14 +25,16 @@ export const setname = {
 	canRunPublic: false,
 	canRunPrivate: true,
 	requireAdmin: false,
-	execute(msg, args) {
+	async execute(msg, args) {
 		if (args == undefined && msg.text != undefined && msg.text != '')
 			args = [msg.text];
 		if (args[0] != undefined && args[0].trim() != '') {
 			db.updateUser(msg.from.id, {name: args.join(' ')});
 			client.sendMessage(msg.chat.id, 'Name set to <b>' + args.join(' ') + '</b>', {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 			delete chatState[msg.chat.id];
-			updateWeeklyMessage();
+			if (await updateWeeklyMessage()) {
+				client.sendMessage(msg.chat.id, 'Announcement message updated!', {message_thread_id: msg.message_thread_id});
+			}
 			return;
 		}
 		chatState[msg.chat.id] = {command: 'setname'};

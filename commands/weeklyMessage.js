@@ -75,8 +75,10 @@ export const sendweeklymessage = {
 				return;
 			}
 		}
-		sendNewWeeklyMessage();
-		client.sendMessage(msg.chat.id, 'Weekly message sent!', {message_thread_id: msg.message_thread_id});
+		if (await sendNewWeeklyMessage())
+			client.sendMessage(msg.chat.id, 'Weekly message sent!', {message_thread_id: msg.message_thread_id});
+		else
+			client.sendMessage(msg.chat.id, 'There was an error sending the weekly message! Did you remember to set the announcement channel?', {message_thread_id: msg.message_thread_id});
 		delete chatState[msg.chat.id];
 	}
 }
@@ -159,7 +161,7 @@ export const setweeklymessagetime = {
 
 export async function sendNewWeeklyMessage() {
 	let id = db.getAnnouncementChannel();
-	if (id == null) return;
+	if (id == null) return false;
 	let [channelId, threadId] = ("" + id).split(':');
 	let now = new Date();
 	let week = new Date();
@@ -171,23 +173,25 @@ export async function sendNewWeeklyMessage() {
 	db.setWeekMessageId(newWeeklyMessage.message_id);
 	db.setWeeklyMessageWeek(week);
 	db.setWeeklyMessageText(message);
+	return true;
 }
 
-export function updateWeeklyMessage() {
+export async function updateWeeklyMessage() {
 	let channel = db.getAnnouncementChannel();
 	let id = db.getWeekMessageId();
 	let week = db.getWeeklyMessageWeek();
-	if (channel == null || id == null || week == null) return;
+	if (channel == null || id == null || week == null) return false;
 	week = new Date(week);
 	let [channelId, threadId] = ("" + channel).split(':');
 	let now = new Date();
 	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(week));
 	let message = generateScheduleMessage(bookings);
-	if (message == db.getWeeklyMessageText()) return;
-	client.editMessageText(message, {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
+	if (message == db.getWeeklyMessageText()) return false;
+	await client.editMessageText(message, {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
 		console.log("There was an error when trying to update the announcement message, this is probably fine as we don't check that changes actually happened, but just in case it's needed, here is the error", err);
 	}); // we don't know if this is going to fail on not, telegram doesn't have an api to get an old message apparently
 	db.setWeeklyMessageText(message);
+	return true;
 }
 
 export function generateScheduleMessage(bookings) {

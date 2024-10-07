@@ -71,7 +71,9 @@ export const book = {
 			});
 			client.sendMessage(msg.chat.id, 'Your booking has been added for ' + chatState[msg.chat.id].date.toString() + ' from ' + chatState[msg.chat.id].timeStart.toString() + ' to ' + chatState[msg.chat.id].timeEnd.toString() + '!', {message_thread_id: msg.message_thread_id});
 			delete chatState[msg.chat.id];
-			updateWeeklyMessage();
+			if (await updateWeeklyMessage()) {
+				client.sendMessage(msg.chat.id, 'Announcement message updated!', {message_thread_id: msg.message_thread_id});
+			}
 		}
 	}
 }
@@ -166,7 +168,9 @@ export const removebooking = {
 				if (booking != undefined) {
 					db.removeBooking(chatState[msg.chat.id].date, chatState[msg.chat.id].timeStart);
 					client.sendMessage(msg.chat.id, 'Booking removed!', {message_thread_id: msg.message_thread_id});
-					updateWeeklyMessage();
+					if (await updateWeeklyMessage()) {
+						client.sendMessage(msg.chat.id, 'Announcement message updated!', {message_thread_id: msg.message_thread_id});
+					}
 				} else {
 					client.sendMessage(msg.chat.id, 'You don\'t have a booking for that date!', {message_thread_id: msg.message_thread_id});
 				}
@@ -182,7 +186,7 @@ export const copyfromlastweek = {
 	canRunPublic: false,
 	canRunPrivate: true,
 	requireAdmin: true,
-	execute(msg, args) {
+	async execute(msg, args) {
 		client.sendMessage(msg.chat.id, 'Feature currently disabled', {message_thread_id: msg.message_thread_id});
 		return;
 		let now = new Date();
@@ -219,6 +223,8 @@ export const copyfromlastweek = {
 			message += `- ${formatDate(booking.date)} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 		}
 		client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
-		updateWeeklyMessage();
+		if (await updateWeeklyMessage()) {
+			client.sendMessage(msg.chat.id, 'Announcement message updated!', {message_thread_id: msg.message_thread_id});
+		}
 	}
 }
