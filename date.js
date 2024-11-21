@@ -2,7 +2,11 @@
 
 export default class FancyDate {
 	constructor(day, month, year) {
-		if (day instanceof Object) {
+		if (day instanceof Date) {
+			month = day.getMonth();
+			year = day.getFullYear();
+			day = day.getDate();
+		} else if (day instanceof Object) {
 			month = day.month;
 			year = day.year;
 			day = day.day;
@@ -11,10 +15,6 @@ export default class FancyDate {
 			day = parsed.day;
 			month = parsed.month;
 			year = parsed.year;
-		} else if (day instanceof Date) {
-			month = day.getMonth();
-			year = day.getFullYear();
-			day = day.getDate();
 		}
 		let now = new Date();
 		if (day === undefined) day = now.getDate();

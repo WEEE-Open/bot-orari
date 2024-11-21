@@ -1,6 +1,7 @@
 import { db, client, chatState, cron } from '../index.js';
 import FancyDate from '../date.js';
 import Time from '../time.js';
+import { userToLink } from "../utils.js";
 
 export const previeweeklymessage = {
 	name: 'previeweeklymessage',
@@ -159,6 +160,20 @@ export const setweeklymessagetime = {
 	}
 }
 
+export const forceupdateweeklymessage = {
+	name: 'forceupdateweeklymessage',
+	description: 'Force update the weekly message',
+	canRunPublic: false,
+	canRunPrivate: true,
+	requireAdmin: true,
+	async execute(msg, args) {
+		if (await updateWeeklyMessage())
+			client.sendMessage(msg.chat.id, 'Weekly message updated!', {message_thread_id: msg.message_thread_id});
+		else
+			client.sendMessage(msg.chat.id, 'There was an error updating the weekly message!', {message_thread_id: msg.message_thread_id});
+	}
+}
+
 export async function sendNewWeeklyMessage() {
 	let id = db.getAnnouncementChannel();
 	if (id == null) return false;
@@ -208,14 +223,7 @@ export function generateScheduleMessage(bookings) {
 		message += d + ':\n';
 		bookings.forEach((booking) => {
 			let user = db.getUser(booking.userId);
-			let userlink = booking.userId; // emergency backup, should never happen
-			if (user != undefined) {
-				if (user.name != undefined) {
-					if (user.username != undefined) userlink = '<a href="https://t.me/' + user.username + '">' + user.name+ '</a>';
-					else userlink = user.name;
-				} else if (user.username != undefined) userlink = '@' + user.username;
-			}
-			message += ' ▹ ' + userlink + ' from ' + booking.timeStart.toString() + ' to ' + booking.timeEnd.toString() + '\n';
+			message += ' ▹ ' + (user ? userToLink(user) : booking.userId) + ' from ' + booking.timeStart.toString() + ' to ' + booking.timeEnd.toString() + '\n';
 		});
 		message += '\n';
 	});

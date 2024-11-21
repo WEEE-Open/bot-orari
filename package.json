@@ -11,7 +11,7 @@
   "license": "AGPL v3",
   "dependencies": {
     "node-schedule": "^2.1.1",
-    "node-telegram-bot-api": "^0.64.0"
+    "node-telegram-bot-api": "^0.66.0"
   },
   "type": "module",
   "nodemonConfig": {

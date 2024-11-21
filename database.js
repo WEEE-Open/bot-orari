@@ -158,6 +158,14 @@ export default class JsonDB {
 		return this.db.users.find(user => user.id == id);
 	}
 
+	getUsersMap() {
+		let users = {};
+		this.db.users.forEach(user => {
+			users[user.id] = user;
+		});
+		return users;
+	}
+
 	addUser(user) {
 		this.db.users.push({sendReminderNotification: true, ...user});
 		this.update();

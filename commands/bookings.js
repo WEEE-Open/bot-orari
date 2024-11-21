@@ -2,6 +2,7 @@ import FancyDate from '../date.js';
 import { db, client, chatState } from '../index.js';
 import Time from '../time.js';
 import { updateWeeklyMessage } from './weeklyMessage.js';
+import { userToLink } from '../utils.js';
 
 export const book = {
 	name: 'book',
@@ -85,16 +86,31 @@ export const bookings = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	execute(msg, args) {
-		let bookings = db.getBookingsByUser(msg.from.id);
-		if (bookings.length == 0) {
-			client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
-			return;
+		let bookings;
+		if (args != undefined && args[0] == "all") {
+			bookings = db.getBookings();
+			if (bookings.length == 0) {
+				client.sendMessage(msg.chat.id, "There are no bookings", {message_thread_id: msg.message_thread_id});
+				return;
+			}
+			let users = db.getUsersMap();
+			let message = '';
+			for (let booking of bookings) {
+				message += `- ${userToLink(users[booking.userId])} ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+			}
+			client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
+		} else {
+			bookings = db.getBookingsByUser(msg.from.id);
+			if (bookings.length == 0) {
+				client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
+				return;
+			}
+			let message = '';
+			for (let booking of bookings) {
+				message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+			}
+			client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 		}
-		let message = '';
-		for (let booking of bookings) {
-			message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
-		}
-		client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 	}
 }
 
