@@ -17,12 +17,12 @@ export default class FancyDate {
 			year = parsed.year;
 		}
 		let now = new Date();
-		if (day === undefined) day = now.getDate();
-		if (month === undefined) month = now.getMonth();
-		if (year === undefined) year = now.getFullYear();
-		this.day = Number(day);
-		this.month = Number(month);
-		this.year = Number(year);
+		if (year != undefined) now.setFullYear(year);
+		if (month != undefined) now.setMonth(month);
+		if (day != undefined) now.setDate(day);
+		this.day = now.getDate();
+		this.month = now.getMonth();
+		this.year = now.getFullYear();
 	}
 
 	get date() {
