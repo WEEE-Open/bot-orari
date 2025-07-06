@@ -59,6 +59,7 @@ export const adduser = {
 			}
 			db.addUser({id: args[0]});
 			client.sendMessage(msg.chat.id, 'User added!', {message_thread_id: msg.message_thread_id});
+			delete chatState[msg.chat.id];
 			return;
 		}
 		chatState[msg.chat.id] = {command: 'adduser'};
@@ -76,12 +77,14 @@ export const removeuser = {
 		if (args == undefined && msg.text != undefined && msg.text != '')
 			args = [msg.text];
 		if (args[0] != undefined && args[0] != '') {
-			if (db.getUser(args[0]) == undefined || db.getUserByUsername(args[0]) == undefined) {
+			let user = db.getUser(args[0]) || db.getUserByUsername(args[0]);
+			if (user == undefined) {
 				client.sendMessage(msg.chat.id, 'User does not exist!', {message_thread_id: msg.message_thread_id});
 				return;
 			}
-			db.removeUser(args[0]);
+			db.removeUser(user.id);
 			client.sendMessage(msg.chat.id, 'User removed!', {message_thread_id: msg.message_thread_id});
+			delete chatState[msg.chat.id];
 			return;
 		}
 		chatState[msg.chat.id] = {command: 'removeuser'};
