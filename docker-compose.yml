@@ -1,0 +1,12 @@
+
+
+
+services:
+  bot:
+    build:
+      context: "."
+      dockerfile: "./Dockerfile"
+    volumes:
+      - type: bind
+        source: .
+        target: /usr/src/app/
