@@ -12,7 +12,7 @@
   "dependencies": {
     "node-schedule": "^2.1.1",
     "node-telegram-bot-api": "^0.66.0",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.13"
   },
   "type": "module",
   "nodemonConfig": {
