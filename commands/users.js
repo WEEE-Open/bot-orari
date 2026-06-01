@@ -4,6 +4,8 @@ import { updateWeeklyMessage } from './weeklyMessage.js';
 import dayjs from 'dayjs';
 import weekOfYear from 'dayjs/plugin/weekOfYear.js';
 
+import config from "../config.js";
+
 dayjs.extend(weekOfYear);
 
 export const addfirstuser = {
@@ -13,6 +15,7 @@ export const addfirstuser = {
 	canRunPrivate: true,
 	requireAdmin: false,
 	execute(msg, args) {
+		if (config.ldap) return client.sendMessage(msg.chat.id, 'LDAP syncronization is enabled, manually managing users is disabled.', {message_thread_id: msg.message_thread_id});
 		if (db.getUsers().length != 0) {
 			client.sendMessage(msg.chat.id, 'There are already users in this bot, use \\adduser to add a new user', {message_thread_id: msg.message_thread_id});
 			return;
@@ -29,6 +32,7 @@ export const setname = {
 	canRunPrivate: true,
 	requireAdmin: false,
 	async execute(msg, args) {
+		if (config.ldap) return client.sendMessage(msg.chat.id, 'LDAP syncronization is enabled, manually managing users is disabled.', {message_thread_id: msg.message_thread_id});
 		if (args == undefined && msg.text != undefined && msg.text != '')
 			args = [msg.text];
 		if (args[0] != undefined && args[0].trim() != '') {
@@ -52,6 +56,7 @@ export const adduser = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	execute(msg, args) {
+		if (config.ldap) return client.sendMessage(msg.chat.id, 'LDAP syncronization is enabled, manually managing users is disabled.', {message_thread_id: msg.message_thread_id});
 		if (args == undefined && msg.text != undefined && msg.text != '')
 			args = [msg.text];
 		if (args[0] != undefined && args[0] != '') {
@@ -77,6 +82,7 @@ export const removeuser = {
 	canRunPrivate: true,
 	requireAdmin: true,
 	execute(msg, args) {
+		if (config.ldap) return client.sendMessage(msg.chat.id, 'LDAP syncronization is enabled, manually managing users is disabled.', {message_thread_id: msg.message_thread_id});
 		if (args == undefined && msg.text != undefined && msg.text != '')
 			args = [msg.text];
 		if (args[0] != undefined && args[0] != '') {

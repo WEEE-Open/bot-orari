@@ -11,8 +11,8 @@ import { previeweeklymessage, setannouncementchannel, sendweeklymessage, setweek
 export const chatState = {};
 
 export const client = new Telegram(config.telegramApiKey, {polling: true});
-export const db = new JsonDB({ path: './db.json' });
-export const cron = new Cron();
+export const db = new JsonDB(config);
+export const cron = new Cron(config);
 
 export const commands = {
 	// utils
