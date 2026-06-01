@@ -1,7 +1,10 @@
-import FancyDate from '../date.js';
 import { db, client, chatState, cron } from '../index.js';
 import Time from '../time.js';
 import { updateWeeklyMessage } from './weeklyMessage.js';
+import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear.js';
+
+dayjs.extend(weekOfYear);
 
 export const addfirstuser = {
 	name: 'addfirstuser',
@@ -209,9 +212,8 @@ export const setremindertime = {
 }
 
 export function sendReminderToAllUsers() {
-	let date = new Date();
-	date.setDate(date.getDate() + 7);
-	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(date));
+	let date = dayjs().add(7, 'day');
+	let bookings = db.getBookingsByWeek(date.year(), date.week());
 	let users = db.getUsers();
 	for (let user of users) {
 		if (user.sendReminderNotification && bookings.find(booking => booking.userId == user.id) == undefined) {

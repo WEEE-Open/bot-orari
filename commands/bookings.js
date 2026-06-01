@@ -1,8 +1,8 @@
-import FancyDate from '../date.js';
 import { db, client, chatState } from '../index.js';
 import Time from '../time.js';
 import { updateWeeklyMessage } from './weeklyMessage.js';
-import { userToLink } from '../utils.js';
+import { userToLink, dateStringToDayJs } from '../utils.js';
+import dayjs from 'dayjs';
 
 export const book = {
 	name: 'book',
@@ -24,16 +24,15 @@ export const book = {
 		}
 		
 		if (args[0] != undefined) {
-			try {
-				let date = FancyDate.fromString(args[0]);
-				if (date.inPast()) {
-					client.sendMessage(msg.chat.id, 'You can\'t book in the past!', {message_thread_id: msg.message_thread_id});
-					chatState[msg.chat.id].date = null;
-				} else {
-					chatState[msg.chat.id].date = date;
-				}
-			} catch (e) {
+			let date = dateStringToDayJs(args[0]);
+			if (!date.isValid()) {
 				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
+				chatState[msg.chat.id].date = null;
+			} else if (date.isBefore(dayjs())) {
+				client.sendMessage(msg.chat.id, 'You can\'t book in the past!', {message_thread_id: msg.message_thread_id});
+				chatState[msg.chat.id].date = null;
+			} else {
+				chatState[msg.chat.id].date = date;
 			}
 		}
 
@@ -70,7 +69,7 @@ export const book = {
 				timeStart: chatState[msg.chat.id].timeStart,
 				timeEnd: chatState[msg.chat.id].timeEnd
 			});
-			client.sendMessage(msg.chat.id, 'Your booking has been added for ' + chatState[msg.chat.id].date.toString() + ' from ' + chatState[msg.chat.id].timeStart.toString() + ' to ' + chatState[msg.chat.id].timeEnd.toString() + '!', {message_thread_id: msg.message_thread_id});
+			client.sendMessage(msg.chat.id, 'Your booking has been added for ' + chatState[msg.chat.id].date.format('YYYY-MM-DD') + ' from ' + chatState[msg.chat.id].timeStart.toString() + ' to ' + chatState[msg.chat.id].timeEnd.toString() + '!', {message_thread_id: msg.message_thread_id});
 			delete chatState[msg.chat.id];
 			if (await updateWeeklyMessage()) {
 				client.sendMessage(msg.chat.id, 'Announcement message updated!', {message_thread_id: msg.message_thread_id});
@@ -96,7 +95,7 @@ export const bookings = {
 			let users = db.getUsersMap();
 			let message = '';
 			for (let booking of bookings) {
-				message += `- ${userToLink(users[booking.userId])} ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+				message += `- ${userToLink(users[booking.userId])} ${booking.date.format('YYYY-MM-DD')} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 			}
 			client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 		} else {
@@ -107,7 +106,7 @@ export const bookings = {
 			}
 			let message = '';
 			for (let booking of bookings) {
-				message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+				message += `- ${booking.date.format('YYYY-MM-DD')} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 			}
 			client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 		}
@@ -130,23 +129,22 @@ export const removebooking = {
 				args = [null, msg.text];
 		}
 		if (args[0] != undefined) {
-			try {
-				let date = new FancyDate(args[0]);
-				if (date.inPast()) {
-					client.sendMessage(msg.chat.id, 'You can\'t delte bookings in the past!', {message_thread_id: msg.message_thread_id});
-					chatState[msg.chat.id].date = null;
-				} else {
-					chatState[msg.chat.id].date = date;
-					let bookingsByDateByUser = db.getBookingsByDateByUser(chatState[msg.chat.id].date, msg.from.id);
-					if (bookingsByDateByUser.length == 0) {
-						client.sendMessage(msg.chat.id, 'You have no bookings for that date!', {message_thread_id: msg.message_thread_id});
-						chatState[msg.chat.id].date = null;
-					} else if (bookingsByDateByUser.length == 1) {
-						chatState[msg.chat.id].timeStart = bookingsByDateByUser[0].timeStart;
-					}
-				}
-			} catch (e) {
+			let date = dayjs(args[0]);
+			if (!date.isValid()) {
 				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
+				chatState[msg.chat.id].date = null;
+			} if (date.isBefore(dayjs())) {
+				client.sendMessage(msg.chat.id, 'You can\'t delte bookings in the past!', {message_thread_id: msg.message_thread_id});
+				chatState[msg.chat.id].date = null;
+			} else {
+				chatState[msg.chat.id].date = date;
+				let bookingsByDateByUser = db.getBookingsByDateByUser(chatState[msg.chat.id].date, msg.from.id);
+				if (bookingsByDateByUser.length == 0) {
+					client.sendMessage(msg.chat.id, 'You have no bookings for that date!', {message_thread_id: msg.message_thread_id});
+					chatState[msg.chat.id].date = null;
+				} else if (bookingsByDateByUser.length == 1) {
+					chatState[msg.chat.id].timeStart = bookingsByDateByUser[0].timeStart;
+				}
 			}
 		}
 		if (args[1] != undefined) {
@@ -156,7 +154,8 @@ export const removebooking = {
 				client.sendMessage(msg.chat.id, 'Invalid start time!', {message_thread_id: msg.message_thread_id});
 			}
 		}
-		let bookings = db.getBookingsByUser(msg.from.id).filter(booking => !booking.date.inPast());
+		const now = dayjs();
+		let bookings = db.getBookingsByUser(msg.from.id).filter(booking => !booking.date.isBefore(now));
 		if (args.length == 0) {
 			if (bookings.length == 0) {
 				client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
@@ -169,7 +168,7 @@ export const removebooking = {
 			} else {
 				let message = 'Your current bookings:\n\n';
 				for (let booking of bookings) {
-					message += `- ${booking.date.toString()} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
+					message += `- ${booking.date.format('YYYY-MM-DD')} ${booking.timeStart.toString()} - ${booking.timeEnd.toString()}\n`;
 				}
 				client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', message_thread_id: msg.message_thread_id});
 			}
@@ -180,7 +179,7 @@ export const removebooking = {
 			if (chatState[msg.chat.id].timeStart == undefined) {
 				client.sendMessage(msg.chat.id, 'Please enter the start time of the booking to remove:', {message_thread_id: msg.message_thread_id});
 			} else {
-				let booking = bookings.find(booking => booking.date.isEqualTo(chatState[msg.chat.id].date) && booking.timeStart.isSame(chatState[msg.chat.id].timeStart));
+				let booking = bookings.find(booking => booking.date.isSame(chatState[msg.chat.id].date, "day") && booking.timeStart.isSame(chatState[msg.chat.id].timeStart));
 				if (booking != undefined) {
 					db.removeBooking(chatState[msg.chat.id].date, chatState[msg.chat.id].timeStart);
 					client.sendMessage(msg.chat.id, 'Booking removed!', {message_thread_id: msg.message_thread_id});

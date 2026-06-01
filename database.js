@@ -1,8 +1,11 @@
 import fs from 'fs';
+import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter.js'
 
 import Time from './time.js';
-import FancyDate from './date.js';
 import { isJsonString } from './utils.js';
+
+dayjs.extend(isSameOrAfter);
 
 export default class JsonDB {
 
@@ -56,17 +59,13 @@ export default class JsonDB {
 		this.db.weeklyMessageText = this.db.weeklyMessageText || null;
 		this.db.bookings = this.db.bookings || [];
 		this.db.bookings.map(booking => {
-			if (typeof booking.date == "string")
-				booking.date = FancyDate.fromString(booking.date); // backwards compatibility
-			else booking.date = new FancyDate(booking.date);
+			booking.date = dayjs(booking.date);
 			booking.timeStart = new Time(...booking.timeStart);
 			booking.timeEnd = new Time(...booking.timeEnd);
 			return booking;
 		});
-		let aWeekAgo = new Date();
-		aWeekAgo.setDate(aWeekAgo.getDate() - 7);
-		aWeekAgo = new FancyDate(aWeekAgo);
-		this.db.bookings = this.db.bookings.filter(booking => booking.date.isSameOrGreaterThan(aWeekAgo));
+		let aWeekAgo = dayjs().subtract(7, "day");
+		this.db.bookings = this.db.bookings.filter(booking => !booking.date.isBefore(aWeekAgo));
 		this.sortBookings();
 		this.db.users = this.db.users || [];
 
@@ -87,9 +86,9 @@ export default class JsonDB {
 	}
 	
 	getBookingsByUser(userId, past = false) {
-		let now = new FancyDate();
+		const now = dayjs();
 		return this.db.bookings.filter(booking => {
-			return booking.userId == userId && (past || booking.date.isSameOrGreaterThan(now));
+			return booking.userId == userId && (past || booking.date.isSameOrAfter(now));
 		});
 	}
 
@@ -113,8 +112,8 @@ export default class JsonDB {
 	 */
 	sortBookings() {
 		this.db.bookings.sort((a, b) => {
-			if (a.date.isLessThan(b.date)) return -1;
-			if (b.date.isLessThan(a.date)) return 1;
+			if (a.date.isBefore(b.date)) return -1;
+			if (b.date.isBefore(a.date)) return 1;
 			if (a.timeStart.isBefore(b.timeStart)) return -1;
 			if (b.timeStart.isBefore(a.timeStart)) return 1;
 			if (a.timeEnd.isBefore(b.timeEnd)) return -1;
@@ -124,30 +123,28 @@ export default class JsonDB {
 	}
 
 	removeBooking(date, timeStart) {
-		this.db.bookings = this.db.bookings.filter(booking => !(booking.date.isEqualTo(date) && booking.timeStart.isSame(timeStart)));
+		this.db.bookings = this.db.bookings.filter(booking => !(booking.date.isSame(date, "day") && booking.timeStart.isSame(timeStart)));
 		this.update();
 	}
 
 	getBookingsByWeek(year, week) {
 		return this.db.bookings.filter(booking => {
-			let bookingWeek = booking.date.week;
-			return bookingWeek[0] == year && bookingWeek[1] == week;
+			return booking.date.year() == year && booking.date.week() == week;
 		});
 	}
 
 	getBookingsByWeekByUser(year, week, userId) {
 		return this.db.bookings.filter(booking => {
-			let bookingWeek = booking.date.getWeekNumber();
-			return bookingWeek[0] == year && bookingWeek[1] == week && booking.userId == userId;
+			return booking.date.year() == year && booking.date.week() == week && booking.userId == userId;
 		});
 	}
 
 	getBookingsByDate(date) {
-		return this.db.bookings.filter(booking => booking.date.isEqualTo(date));
+		return this.db.bookings.filter(booking => booking.date.isSame(date, "day"));
 	}
 
 	getBookingsByDateByUser(date, userId) {
-		return this.db.bookings.filter(booking => booking.date.isEqualTo(date) && booking.userId == userId);
+		return this.db.bookings.filter(booking => booking.date.isSame(date, "day") && booking.userId == userId);
 	}
 
 	getUsers() {

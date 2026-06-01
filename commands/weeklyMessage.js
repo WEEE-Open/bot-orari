@@ -1,7 +1,10 @@
 import { db, client, chatState, cron } from '../index.js';
-import FancyDate from '../date.js';
 import Time from '../time.js';
 import { userToLink } from "../utils.js";
+import dayjs from 'dayjs';
+import weekOfYear from 'dayjs/plugin/weekOfYear.js';
+
+dayjs.extend(weekOfYear);
 
 export const previeweeklymessage = {
 	name: 'previeweeklymessage',
@@ -11,9 +14,8 @@ export const previeweeklymessage = {
 	requireAdmin: true,
 	execute(msg, args = []) {
 		let offset = parseInt(args[0]) || 1;
-		let date = new Date();
-		date.setDate(date.getDate() + offset*7);
-		let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(date));
+		let date = dayjs().add(offset*7, 'day');
+		let bookings = db.getBookingsByWeek(date.year(), date.week());
 		let message = generateScheduleMessage(bookings);
 		client.sendMessage(msg.chat.id, message, {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: msg.message_thread_id});
 	}
@@ -178,10 +180,9 @@ export async function sendNewWeeklyMessage() {
 	let id = db.getAnnouncementChannel();
 	if (id == null) return false;
 	let [channelId, threadId] = ("" + id).split(':');
-	let now = new Date();
-	let week = new Date();
-	if (now.getDay() == 0 || now.getDay() == 6) week.setDate(week.getDate() + 7);
-	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(week));
+	let now = dayjs();
+	let week = dayjs().add((now.day() == 0 || now.day() == 6) ? 7 : 0, 'day');
+	let bookings = db.getBookingsByWeek(week.year(), week.week());
 	let message = generateScheduleMessage(bookings);
 	let newWeeklyMessage = await client.sendMessage(channelId, message, {parse_mode: 'HTML', disable_web_page_preview: true, message_thread_id: threadId});
 	db.setWeekMessageLastTime(now);
@@ -198,8 +199,8 @@ export async function updateWeeklyMessage() {
 	if (channel == null || id == null || week == null) return false;
 	week = new Date(week);
 	let [channelId, threadId] = ("" + channel).split(':');
-	let now = new Date();
-	let bookings = db.getBookingsByWeek(...FancyDate.getWeekNumber(week));
+	let date = dayjs();
+	let bookings = db.getBookingsByWeek(date.year(), date.week());
 	let message = generateScheduleMessage(bookings);
 	if (message == db.getWeeklyMessageText()) return false;
 	await client.editMessageText(message, {parse_mode: 'HTML', disable_web_page_preview: true, message_id: id, chat_id: channelId}).catch((err) => {
@@ -214,12 +215,12 @@ export function generateScheduleMessage(bookings) {
 	let message = 'Hi everyone. Here are this week\'s opening schedule:\n\n';
 	let days = {};
 	bookings.forEach((booking) => {
-		let d = booking.date.weekDay;
+		let d = booking.date.day();
 		if (!days[d]) days[d] = []
-		days[booking.date.weekDay].push(booking);
+		days[d].push(booking);
 	});
 	Object.values(days).forEach((bookings) => {
-		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][bookings[0].date.weekDay] + "</b>, " + bookings[0].date.day + '/' + (bookings[0].date.month + 1);
+		let d = "<b>" + ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][bookings[0].date.day()] + "</b>, " + bookings[0].date.date() + '/' + (bookings[0].date.month() + 1);
 		message += d + ':\n';
 		bookings.forEach((booking) => {
 			let user = db.getUser(booking.userId);
