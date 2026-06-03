@@ -65,7 +65,7 @@ export default class JsonDB {
 			return booking;
 		});
 		let aWeekAgo = dayjs().subtract(7, "day");
-		this.db.bookings = this.db.bookings.filter(booking => !booking.date.isBefore(aWeekAgo));
+		this.db.bookings = this.db.bookings.filter(booking => !booking.date.isBefore(aWeekAgo, "day"));
 		this.sortBookings();
 		this.db.users = this.db.users || [];
 
@@ -112,8 +112,8 @@ export default class JsonDB {
 	 */
 	sortBookings() {
 		this.db.bookings.sort((a, b) => {
-			if (a.date.isBefore(b.date)) return -1;
-			if (b.date.isBefore(a.date)) return 1;
+			if (a.date.isBefore(b.date, "day")) return -1;
+			if (b.date.isBefore(a.date, "day")) return 1;
 			if (a.timeStart.isBefore(b.timeStart)) return -1;
 			if (b.timeStart.isBefore(a.timeStart)) return 1;
 			if (a.timeEnd.isBefore(b.timeEnd)) return -1;

@@ -28,7 +28,7 @@ export const book = {
 			if (!date.isValid()) {
 				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
 				chatState[msg.chat.id].date = null;
-			} else if (date.isBefore(dayjs())) {
+			} else if (date.isBefore(dayjs(), "day")) {
 				client.sendMessage(msg.chat.id, 'You can\'t book in the past!', {message_thread_id: msg.message_thread_id});
 				chatState[msg.chat.id].date = null;
 			} else {
@@ -133,7 +133,7 @@ export const removebooking = {
 			if (!date.isValid()) {
 				client.sendMessage(msg.chat.id,	'Invalid date!', {message_thread_id: msg.message_thread_id});
 				chatState[msg.chat.id].date = null;
-			} if (date.isBefore(dayjs())) {
+			} if (date.isBefore(dayjs(), "day")) {
 				client.sendMessage(msg.chat.id, 'You can\'t delte bookings in the past!', {message_thread_id: msg.message_thread_id});
 				chatState[msg.chat.id].date = null;
 			} else {
@@ -155,7 +155,7 @@ export const removebooking = {
 			}
 		}
 		const now = dayjs();
-		let bookings = db.getBookingsByUser(msg.from.id).filter(booking => !booking.date.isBefore(now));
+		let bookings = db.getBookingsByUser(msg.from.id).filter(booking => !booking.date.isBefore(now, "day"));
 		if (args.length == 0) {
 			if (bookings.length == 0) {
 				client.sendMessage(msg.chat.id, "You have no bookings", {message_thread_id: msg.message_thread_id});
